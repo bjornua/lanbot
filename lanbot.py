@@ -52,11 +52,6 @@ class LanBOT(lib.irc.Client):
             else:
                 self.msgline(sender_nick, tstr)
         
-        if authed and command == "auth_status" and len(args) == 0:
-            self.msgline(sender_nick, "Currently authed users:")
-            for nick, host in self.authed_users:
-                self.msgline(sender_nick, "  %s@%s" % (nick, host))
-        
         if authed and command == "join" and len(args) == 1:
             self.join(args[0])
 
@@ -74,6 +69,13 @@ class LanBOT(lib.irc.Client):
             for nick, host in self.authed_users:
                 self.msgline(sender_nick, "  %s@%s" % (nick, host))
 
+        if authed and command == "msg" and len(args) == 2:
+            if(recipient.startswith("#")):
+                return
+            self.msgline(sender_nick, "Currently authed users:")
+            for nick, host in self.authed_users:
+                self.msgline(sender_nick, "  %s@%s" % (nick, host))
+    
 class ConnectedLanBOT(LanBOT):
     def __init__(self, sock):
         LanBOT.__init__(self)
