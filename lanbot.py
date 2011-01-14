@@ -13,8 +13,8 @@ users = set((("freeload", "test1234"),))
 
 
 class LanBOT(lib.irc.Client):
-    def __init__(self):
-        lib.irc.Client.__init__(self)
+    def __init__(self, address, port):
+        lib.irc.Client.__init__(self, address, port)
         self.authed_users = set()
     
     def onprivmsg(self, msg, sender_nick, sender_host, recipient):
@@ -88,32 +88,11 @@ class LanBOT(lib.irc.Client):
         lib.irc.Client.onrecvline(self, line)
     
 
-class ConnectedLanBOT(LanBOT):
-    def __init__(self, sock):
-        LanBOT.__init__(self)
-        self.sock = sock
-    
-    def loop(self):
-        while True:
-            data = self.sock.recv(1)
-            self.onrecv(data)
-
-    def send(self, data):
-        LanBOT.send(self, data)
-        self.sock.sendall(data)
-        
-
-sock = socket.socket()
-sock.connect(("clanserver4u2.de.quakenet.org", 6667))
-
-#sock.connect(("gibson.freenode.net", 6667))
-
-bot = ConnectedLanBOT(sock)
+bot = LanBOT("clanserver4u2.de.quakenet.org", 6667)
+#bot = LanBOT("gibson.freenode.net", 6667)
 
 
 bot.nick("LanBOT")
 bot.user("LanBOT", "ignored", "ignored", "Testbot")
 
 bot.loop()
-
-bot = LanBOT()

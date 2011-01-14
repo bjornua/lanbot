@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
-
-
-class Client(object):
+import socket
+class BasicClient(object):
     def __init__(self):
         self.buf = ""
 
@@ -86,4 +85,22 @@ class Client(object):
         self.pong(token)
     
     
+class SocketClient(BasicClient):
+    def __init__(self, sock):
+        BasicClient.__init__(self)
+        self.sock = sock
+    
+    def loop(self):
+        while True:
+            data = self.sock.recv(1)
+            self.onrecv(data)
 
+    def send(self, data):
+        BasicClient.send(self, data)
+        self.sock.sendall(data)
+
+class Client(SocketClient):
+    def __init__(self, address, port):
+        sock = socket.socket()
+        sock.connect((address, port))
+        SocketClient.__init__(self, sock)
