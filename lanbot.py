@@ -76,6 +76,15 @@ class LanBOT(lib.irc.Client):
             for nick, host in self.authed_users:
                 self.msgline(sender_nick, "  %s@%s" % (nick, host))
     
+    def sendline(self, line):
+        print "< " + line
+        lib.irc.Client.sendline(self, line)
+    
+    def onrecvline(self, line):
+        print "> " + line
+        lib.irc.Client.onrecvline(self, line)
+    
+
 class ConnectedLanBOT(LanBOT):
     def __init__(self, sock):
         LanBOT.__init__(self)
