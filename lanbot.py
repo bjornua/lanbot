@@ -22,7 +22,7 @@ class LanBOT(lib.irc.Client):
         
         authed = (sender_nick, sender_host) in self.authed_users
         
-        m = re.match("cmd (.*)", msg)
+        m = re.match("cmd (.+)", msg)
         if m == None:
             return
 
