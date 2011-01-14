@@ -51,6 +51,9 @@ class LanBOT(lib.irc.Client):
                 self.msgline(recipient, tstr)
             else:
                 self.msgline(sender_nick, tstr)
+
+        if authed and command == "nick" and len(args) == 1:
+            self.nick(args[0])
         
         if authed and command == "join" and len(args) == 1:
             self.join(args[0])
