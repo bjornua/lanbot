@@ -45,7 +45,7 @@ class LanBOT(lib.irc.Client):
             self.authed_users.discard((sender_nick, sender_host))
             self.msgline(sender_nick, "Logged out")
         
-        if authed and command == "now":
+        if authed and command == "now" and len(args) == 0:
             tstr = datetime.datetime.now().strftime("%d/%m-%Y kl. %H:%M:%S")
             if recipient.startswith("#"):
                 self.msgline(recipient, tstr)
