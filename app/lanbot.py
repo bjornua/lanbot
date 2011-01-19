@@ -4,6 +4,11 @@ import shlex
 import lib.irc
 import datetime
 
+
+quoted_strings = r'"((\\\\|\\"|[^"])*)"'
+normal_args = r''
+
+
 users = set((("freeload", "test1234"),))
 
 class LANBot(object):

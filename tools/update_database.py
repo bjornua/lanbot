@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-import couchdb
 from itertools import groupby
 
 from pprint import pprint
 
 
 sys.path[0] = os.path.join(os.path.dirname(__file__), "..")
+
+import couchdb
 from app.config.generated import config
 
 os.chdir(sys.path[0])
@@ -44,7 +45,7 @@ docs = []
 for designdoc, views in groupby(views, lambda val: val[0]):
     try:
         doc = db["_design/" + designdoc]
-    except couchdb.client.ResourceNotFound:
+    except couchdb.ResourceNotFound:
         doc = {}
         exists = False
     else:
@@ -60,3 +61,6 @@ for designdoc, views in groupby(views, lambda val: val[0]):
     if not exists or db[doc["_id"]] != doc:
         print "Updating", designdoc + ",", viewname + ",", type
         db[doc["_id"]] = doc
+
+
+
