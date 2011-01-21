@@ -2,16 +2,18 @@
 import re
 import app.lib.irc
 import datetime
+
+
 from app.utils import db
 from app.lib.date import nowtuple
 from app.lib.string import parse_command
+from app.model.session import Session
+import app.model.user
 
-users = set((("freeload", "test1234"),))
 
 class LANBot(object):
     def __init__(self, address, port):
         self.client = app.lib.irc.Client(address, port)
-        self.authed_users = set()
         
         prev_onrecvline = self.client.onrecvline
         def onrecvline(line):
@@ -71,70 +73,138 @@ class LANBot(object):
             except:
                 raise
             else:
-                self.oncommand(sender_nick, sender_host, channel, command, args)
+                session = Session(sender_nick, sender_host)
+                self.oncommand(session, sender_nick, sender_host, channel, command, args)
+                session.save()
     
-    def oncommand(self, sender_nick, sender_host, channel, command, args):
-        authed = (sender_nick, sender_host) in self.authed_users
-
-        if not authed and channel == None and command == "login" and len(args) == 2:
-            username, password = args
-            if (username, password) in users:
-                self.authed_users.add((sender_nick, sender_host))
-                self.client.msgline(sender_nick, "Authed as %s@%s" % (sender_nick, sender_host))
-            else:
-                self.client.msgline(sender_nick, "Could not recognize user %s with the given password. Not authed." % (repr(username),))
-            return
+    def oncommand(self, session, sender_nick, sender_host, channel, command, args):
+        def msgsender(msg):
+            self.client.msgline(sender_nick, msg)
         
-        if authed and command == "logout" and len(args) == 0:
-            self.authed_users.discard((sender_nick, sender_host))
-            self.client.msgline(sender_nick, "Goodbye, %s." % sender_nick)
+        def respond(msg):
+            if channel != None:
+                self.client.msgline(channel, msg)
+            else:
+                msgsender(msg)
+            
+        def require_login():
+            if session.get("user") == None:
+                msgsender("Error: You must be logged in to use this command")
+                return False
+            return True
+        
+        if command == "login" and channel == None:
+            if len(args) != 2:
+                respond("Usage: !login <username> <password>")
+                return
+            
+            if session.get("user") != None:
+                respond("Error: Already logged in, please log out first")
+                return
+            
+            username, password = args
+
+            id_ = app.model.user.authenticate(username, password)
+            if id_ == None:
+                respond("Could not recognize user %s with the given password. Not authed" % (repr(username),))
+                return
+            
+            session["user"] = id_
+            
+            respond("Authed as %s@%s" % (sender_nick, sender_host))
             return
 
-        if authed and channel == None and command == "join" and len(args) == 1:
+        
+        if command == "logout" and channel == None:
+            if len(args) != 0:
+                respond("Usage: !logout")
+                return
+            
+            if not require_login():
+                return
+            session["user"] = None
+            respond("Goodbye, %s." % (sender_nick,))
+            return
+
+        if command == "join" and channel == None:
+            if len(args) != 1:
+                respond("Usage: !join #<channel>")
+                return
+            
+            if not require_login():
+                return
+            
             self.client.join(args[0])
             return
         
-        if authed and channel == None and command == "msg" and len(args) == 2:
+        if command == "msg" and channel == None:
+            if len(args) != 2:
+                respond("Usage: !msg <nick>|<channel> <msg>")
+                return
+            
+            if not require_login():
+                return
+            
             self.client.msgline(args[0], args[1])
             return
 
-        if authed and command == "now" and len(args) == 0:
+        if command == "now":
+            if len(args) != 0:
+                respond("Usage: !now")
+                return
+            
+            if not require_login():
+                return
+            
             tstr = datetime.datetime.now().strftime("%d/%m-%Y kl. %H:%M:%S")
-            if channel == None:
-                self.client.msgline(sender_nick, tstr)
-            else:
-                self.client.msgline(channel, tstr)
+
+            respond(tstr)
             return
 
-        if authed and command == "fart":
+        if command == "fart":
             if channel == None:
-                if len(args) == 1:
-                    channel = args[0]
-                else:
+                if len(args) != 1:
+                    respond("Usage: !fart <nick>|<channel>")
                     return
+                
+                channel = args[0]
+            else:
+                if len(args) != 0:
+                    respond("Usage: !fart")
+                
+            if not require_login():
+                return
+            
             for line in (
                 " _______   __   __  ___  __    __   __          ___      .__   __.",
                 "|       \ |  | |  |/  / |  |  |  | |  |        /   \     |  \ |  |",
                 "|  .--.  ||  | |  '  /  |  |  |  | |  |       /  ^  \    |   \|  |",
                 "|  |  |  ||  | |    <   |  |  |  | |  |      /  /_\  \   |  . `  |",
                 "|  '--'  ||  | |  .  \  |  `--'  | |  `----./  _____  \  |  |\   |",
-                "|_______/ |__| |__|\__\  \______/  |_______/__/     \__\ |__| \__|"           
+                "|_______/ |__| |__|\__\  \______/  |_______/__/     \__\ |__| \__|"
             ):
                 self.client.msgline(channel, line)
             return
 
-        if authed and command == "leave" and len(args) == 1:
+        if command == "leave":
+            if len(args) != 1:
+                respond("Usage: !leave <channel>")
+                return
+            
+            if not require_login():
+                return
+
             self.client.part(args[0])
             return
 
-        if authed and command == "quit" and len(args) == 1:
+        if command == "quit":
+            if len(args) != 1:
+                respond("Usage: !quit <message>")
+                return
+            
+            if not require_login():
+                return
+
             self.client.quit(args[0])
             exit()
             return
-    
-        if authed and channel == None and command == "auth_status" and len(args) == 0:
-            self.client.msgline(sender_nick, "Currently authed users:")
-            for nick, host in self.authed_users:
-                self.client.msgline(sender_nick, "  %s@%s" % (nick, host))
-            return
-

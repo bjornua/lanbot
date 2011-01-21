@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+from app.utils import db
 
 class Session(object):
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, nick, host):
+        self.nick = nick
+        self.host = host
         self.is_init = False
         self.changed = False
     
@@ -15,19 +17,23 @@ class Session(object):
             self.new_session()
     
     def load_session(self):
-        try:
-            self.doc = list(db().view("session/by_id", key=self.id, include_docs=True))[0].doc
+        for row in db().view("session/by_sender", include_docs=True)[self.nick, self.host]:
+            self.doc = row.doc
             return True
-        except IndexError:
-            return False
+        return False
         
     def new_session(self):
-        self.doc = {"id": self.id, "type": "session", "data":{}}
+        self.doc = {
+            "nickname": self.nick,
+            "host": self.host,
+            "type": "session",
+            "data": {}
+        }
     
     def save(self):
-        if not self.changed:
+        if not self.is_init:
             return
-        self.id, self.doc["_rev"] = db().save(self.doc)
+        self.doc["_id"], self.doc["_rev"] = db().save(self.doc)
     
     def get(self, *args, **kwargs):
         self.init()
@@ -35,6 +41,4 @@ class Session(object):
     
     def __setitem__(self, *args, **kwargs):
         self.init()
-        self.changed = True
         return self.doc["data"].__setitem__(*args,**kwargs)
-
