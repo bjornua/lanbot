@@ -8,16 +8,16 @@ from pprint import pprint
 
 
 sys.path[0] = os.path.join(os.path.dirname(__file__), "..")
+os.chdir(sys.path[0])
 
 import couchdb
 from app.config.generated import config
 
-os.chdir(sys.path[0])
 
 try:
     server = couchdb.Server(config["couchdb_server_url"])
     db = server[config["couchdb_db"]]
-except couchdb.client.ResourceNotFound:
+except couchdb.ResourceNotFound:
     db = server.create(config["couchdb_db"])
 except:
     print "Something bad happened while connecting to couchdb."
