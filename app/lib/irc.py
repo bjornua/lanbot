@@ -70,7 +70,7 @@ class BasicClient(object):
         self.sendline("%s %s" % (command, argstr))
         
     def sendline(self, string):
-        self.send(string + "\r\n")
+        self.send(string + u"\r\n")
 
     def send(self, data):
         pass
@@ -115,7 +115,9 @@ class SocketClient(BasicClient):
 
     def send(self, data):
         BasicClient.send(self, data)
-        self.socket.sendall(data.encode("utf-8"))
+        if isinstance(data, unicode):
+            data = data.encode("utf-8")
+        self.socket.sendall(data)
 
 class Client(SocketClient):
     def __init__(self, address, port):
