@@ -3,21 +3,21 @@ import re
 import socket
 class BasicClient(object):
     def __init__(self):
-        self.buf = ""
+        self.buf = u""
         self._nick = None
     
     def onrecv(self, data):
         self.buf += data
-        lines = self.buf.split("\r\n")
+        lines = self.buf.split(u"\r\n")
         self.buf = lines.pop()
         for line in lines:
             self.onrecvline(line)
     
     def onrecvline(self, line):
-        prefix = "([^!@ ]+)|(([^!]*)!([^@]*)@([^ ]*))"
-        command = "([A-Za-z]+)|([0-9]{3})"
-        params = "(( [^: ][^ ]*)*)( :(.*))?"
-        message = "(:(%s) )?(%s)(%s)?" % (prefix, command, params)
+        prefix = u"([^!@ ]+)|(([^!]*)!([^@]*)@([^ ]*))"
+        command = u"([A-Za-z]+)|([0-9]{3})"
+        params = u"(( [^: ][^ ]*)*)( :(.*))?"
+        message = u"(:(%s) )?(%s)(%s)?" % (prefix, command, params)
         match = re.match(message, line)
         
         if match == None:
@@ -37,53 +37,54 @@ class BasicClient(object):
         self.onmsg(servername, nick, user, host, command, params)
         
     def join(self, chan):
-        self.command("JOIN", [chan])
+        self.command(u"JOIN", [chan])
 
     def part(self, chan):
-        self.command("PART", [chan])
+        self.command(u"PART", [chan])
 
     def quit(self, msg):
-        self.command("QUIT", [msg])
+        self.command(u"QUIT", [msg])
     
     def nick(self, nick):
-        self.command("NICK", [nick])
+        self.command(u"NICK", [nick])
         if self._nick == None:
             self._nick = nick
     
     def user(self, username, hostname, servername, realname):
-        self.command("USER", [username, hostname, servername, realname])
+        self.command(u"USER", [username, hostname, servername, realname])
     
     def pong(self, msg):
-        self.command("PONG", [msg])
+        self.command(u"PONG", [msg])
     
     def msgline(self, recipient, msg):
-        self.command("PRIVMSG", [recipient, msg])
+        self.command(u"PRIVMSG", [recipient, msg])
+
     
     def command(self, command, args):
         if(len(args) != 0):
-            args[-1] = ":" + args[-1]
-            argstr = " ".join(args)
+            args[-1] = u":" + args[-1]
+            argstr = u" ".join(args)
         else:
-            argstr = ""
+            argstr = u""
         
-        self.sendline("%s %s" % (command, argstr))
+        self.sendline(u"%s %s" % (command, argstr))
         
     def sendline(self, string):
-        self.send(string + "\r\n")
+        self.send(string + u"\r\n")
 
     def send(self, data):
         pass
         
     def onmsg(self, servername, nick, user, host, command, args):
-        if(command == "PING"):
+        if(command == u"PING"):
             self.onping(args[0])
-        if(command == "NICK"):
+        if(command == u"NICK"):
             self.onnick(nick, args[0])
-        if(command == "PRIVMSG"):
+        if(command == u"PRIVMSG"):
             self.onprivmsg(args[1], nick, host, args[0])
     
     def onprivmsg(self, msg, sender_nick, sender_host, recipient):
-        if recipient.startswith("#"):
+        if recipient.startswith(u"#"):
             self.onchanmsg(msg, sender_nick, sender_host, recipient)
         elif recipient == self._nick:
             self.onusermsg(msg, sender_nick, sender_host)
