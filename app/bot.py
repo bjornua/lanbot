@@ -116,7 +116,6 @@ class LANBot(object):
             return
 
         if command.require_auth and session.get("user") == None:
-            msgsender("Error: You must be logged in to use this command")
             return
         
         try:
