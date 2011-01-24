@@ -1,24 +1,31 @@
 # -*- coding: utf-8 -*-
 import re
 import socket
+import threading
+
+re_prefix = "([^!@ ]+)|(([^!]*)!([^@]*)@([^ ]*))"
+re_command = "([A-Za-z]+)|([0-9]{3})"
+re_params = "(( [^: ][^ ]*)*)( :(.*))?"
+re_message = "(:(%s) )?(%s)(%s)?" % (re_prefix, re_command, re_params)
+message_matcher = re.compile(re_message)
+
+
 class BasicClient(object):
     def __init__(self):
         self.buf = ""
         self._nick = None
-    
+        self.writelock = threading.RLock() # Reentrant mutex
+        self._quit = False
+        
     def onrecv(self, data):
         self.buf += data
         lines = self.buf.split("\r\n")
         self.buf = lines.pop()
         for line in lines:
-            self.onrecvline(line)
+            threading.Thread(target = self.onrecvline, args = (line,)).start()
     
     def onrecvline(self, line):
-        prefix = "([^!@ ]+)|(([^!]*)!([^@]*)@([^ ]*))"
-        command = "([A-Za-z]+)|([0-9]{3})"
-        params = "(( [^: ][^ ]*)*)( :(.*))?"
-        message = "(:(%s) )?(%s)(%s)?" % (prefix, command, params)
-        match = re.match(message, line)
+        match = message_matcher.match(line)
         
         if match == None:
             return
@@ -44,6 +51,7 @@ class BasicClient(object):
 
     def quit(self, msg):
         self.command("QUIT", [msg])
+        self._quit = True
     
     def nick(self, nick):
         self.command("NICK", [nick])
@@ -110,14 +118,24 @@ class SocketClient(BasicClient):
     
     def loop(self):
         while True:
+            if self._quit:
+                with self.writelock:
+                    self.socket.close()
+                    return
+            
             data = self.socket.recv(4096)
+            
+            if data == "":
+                return
+            
             self.onrecv(data)
 
     def send(self, data):
         BasicClient.send(self, data)
         if isinstance(data, unicode):
             data = data.encode("utf-8")
-        self.socket.sendall(data)
+        with self.writelock:
+            self.socket.sendall(data)
 
 class Client(SocketClient):
     def __init__(self, address, port):
