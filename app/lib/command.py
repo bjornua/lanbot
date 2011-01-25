@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 class Command(object):
     require_auth = True
+    rate_limit = 0
     def __init__(self, bot, session, sender_nick, sender_host, channel):
         self.session = session
         self.sender_nick = sender_nick

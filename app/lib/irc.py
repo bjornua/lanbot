@@ -3,18 +3,18 @@ import re
 import socket
 import threading
 
+
 re_prefix = "([^!@ ]+)|(([^!]*)!([^@]*)@([^ ]*))"
 re_command = "([A-Za-z]+)|([0-9]{3})"
 re_params = "(( [^: ][^ ]*)*)( :(.*))?"
 re_message = "(:(%s) )?(%s)(%s)?" % (re_prefix, re_command, re_params)
 message_matcher = re.compile(re_message)
 
-
 class BasicClient(object):
     def __init__(self):
         self.buf = ""
         self._nick = None
-        self.writelock = threading.RLock() # Reentrant mutex
+        self.writelock = threading.RLock() # (use "with"-statement to lock)
         self._quit = False
         
     def onrecv(self, data):

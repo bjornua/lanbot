@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
 import app.lib.irc
+import threading
+import collections
+import time
 
 from app.utils import db
 from app.lib.date import nowtuple
@@ -38,6 +41,9 @@ for command in (
 class LANBot(object):
     def __init__(self, address, port):
         self.client = app.lib.irc.Client(address, port)
+        self.ratelock = threading.RLock()
+        self.command_last_run = collections.defaultdict(int)
+        
         
         prev_onrecvline = self.client.onrecvline
         def onrecvline(line):
@@ -106,6 +112,15 @@ class LANBot(object):
 
     def oncommand(self, session, sender_nick, sender_host, channel, command, args):
         command = commands.get(command)
+        
+        now = time.time()
+        
+        with self.ratelock:
+            a = self.command_last_run[command]
+            if now - a - command.rate_limit < 0:
+                return
+            
+            self.command_last_run[command] = now
         
         if command == None:
             return

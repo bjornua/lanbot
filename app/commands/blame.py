@@ -4,6 +4,8 @@ import app.model.search
 
 class Blame(app.lib.command.Command):
     name = "blame"
+    require_auth = False
+    rate_limit = 5 # Minimum time between request
     
     def exists(self):
         return self.channel != None
