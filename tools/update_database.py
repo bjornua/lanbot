@@ -1,4 +1,4 @@
-#!/usr/bin/python -B
+#!/usr/bin/python2 -B
 # -*- coding: utf-8 -*-
 import sys
 import os
