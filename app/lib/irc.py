@@ -6,14 +6,11 @@ import re
 import socket
 import threading
 
-
 re_prefix = "([^!@ ]+)|(([^!]*)!([^@]*)@([^ ]*))"
 re_command = "([A-Za-z]+)|([0-9]{3})"
 re_params = "(( [^: ][^ ]*)*)( :(.*))?"
 re_message = "(:(%s) )?(%s)(%s)?" % (re_prefix, re_command, re_params)
 message_matcher = re.compile(re_message)
-
-
 
 class Parser(object):
     def __init__(self):
@@ -21,10 +18,12 @@ class Parser(object):
         self.e_data = Event() # chunk
         self.e_recvline = Event() # line
         self.e_msg = Event() # servername, nick, user, host, command, params
-        self.e_ping = Event() # server1, [server2]
-        self.e_nick = Event() #  
+
+        self.e_ping = Event() # server1[, server2]
+        self.e_nick = Event() #   
         self.e_privmsg = Event()
         self.e_notice = Event()
+        self.e_topic = Event()
 
         self.e_data.listen(self.ondata)
         self.e_recvline.listen(self.onrecvline)
@@ -57,17 +56,37 @@ class Parser(object):
         self.e_msg.notify(servername, nick, user, host, command, params)
 
     def onmsg(self, servername, nick, user, host, command, args):
-        if(command == "NOTICE"):
-            self.e_notice.notify(args[1], nick, host, args[0])
+        if(command == "332"):
+            self.e_topic.notify(nick, user, host, args[0], args[1], args[2])
         elif(command == "PING"):
             self.e_ping.notify(args[0])
         elif(command == "NICK"):
-            self.e_nick.notify(nick, args[0])
+            self.e_nick.notify(nick, user, host, args[0])
+        elif(command == "NOTICE"):
+            self.e_notice.notify(nick, user, host, args[0], args[1])
         elif(command == "PRIVMSG"):
-            self.e_privmsg.notify(args[1], nick, host, args[0])
+            self.e_privmsg.notify(nick, user, host, args[0], args[1])
     
+parser = Parser()
 
-Parser().e_data.notify(open("/home/bjorn/projects/lanbot/testinput").read())
+def debug(eventname, *args, **kwargs):
+    print "-"*32
+    print "Event", eventname
+    print repr(args)
+    print repr(kwargs)
+
+#parser.e_notice.listen(debug, "Notice")
+parser.e_privmsg.listen(debug, "Privmsg")
+parser.e_topic.listen(debug, "Topic")
+#parser.e_msg.listen(debug, "MSG")
+
+
+parser.e_data.notify(open("/home/bjorn/projects/lanbot/app/lib/derp").read())
+
+
+class Client(object):
+    def __init__(self):
+        pass
 
 #class BasicClient(object):
 #    def __init__(self):
