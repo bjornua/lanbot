@@ -10,6 +10,7 @@ class LANBot(object):
         self.client.parser.event.add("endofmotd", self.onendofmotd)
 
     def onendofmotd(self, *args):
+        print "Joining #dikulan"
         self.client.writer.join("#dikulan")
 
     def onchanmsg(self, fromnick, fromuser, fromhost, chan, msg):
