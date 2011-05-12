@@ -16,12 +16,12 @@ class LANBot(object):
     def onchanmsg(self, fromnick, fromuser, fromhost, chan, msg):
         msg = unicode(msg, "utf-8", "replace")
         date = datetime.now().strftime("%H:%M:%S")
-        print "%s - [%s][%s] %s" % (date, chan, fromnick, msg)
+        print u"%s - [%s][%s] %s" % (date, chan, fromnick, msg)
         
     def onusermsg(self, fromnick, fromuser, fromhost, msg):
         msg = unicode(msg, "utf-8", "replace")
         if fromnick == "freeload" and msg == u"!quit":
             self.client.writer.quit("Quitting")
         date = datetime.now().strftime("%H:%M:%S")
-        print "%s - [%s] %s" % (date, fromnick, msg)
+        print u"%s - [%s] %s" % (date, fromnick, msg)
 
