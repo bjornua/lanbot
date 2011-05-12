@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from event import Event
-from pprint import pprint
+from event import Events
 
 import re
 import socket
@@ -15,26 +14,22 @@ message_matcher = re.compile(re_message)
 class Parser(object):
     def __init__(self):
         self.buf = ""
-        self.e_data = Event() # chunk
-        self.e_recvline = Event() # line
-        self.e_msg = Event() # servername, nick, user, host, command, params
 
-        self.e_ping = Event() # server1[, server2]
-        self.e_nick = Event() #   
-        self.e_privmsg = Event()
-        self.e_notice = Event()
-        self.e_topic = Event()
+        self.event = Events()
 
-        self.e_data.listen(self.ondata)
-        self.e_recvline.listen(self.onrecvline)
-        self.e_msg.listen(self.onmsg)
+        self.event.add("data", self.ondata)
+        self.event.add("line", self.onrecvline)
+        self.event.add("msg", self.onmsg)
+    
+    def reset(self):
+        self.buf = ""
 
     def ondata(self, data):
         self.buf += data
         lines = self.buf.split("\r\n")
         self.buf = lines.pop()
         for line in lines:
-            self.e_recvline.notify(line)
+            self.event.notify("line", line)
 
     def onrecvline(self, line):
         match = message_matcher.match(line)
@@ -53,170 +48,136 @@ class Parser(object):
         if trailparam != None:
             params += [trailparam]
         
-        self.e_msg.notify(servername, nick, user, host, command, params)
+        self.event.notify("msg", servername, nick, user, host, command, params)
 
     def onmsg(self, servername, nick, user, host, command, args):
         if(command == "332"):
-            self.e_topic.notify(nick, user, host, args[0], args[1], args[2])
+            self.event.notify("topic", nick, user, host, args[0], args[1], args[2])
         elif(command == "PING"):
-            self.e_ping.notify(args[0])
+            self.event.notify("ping", args[0])
         elif(command == "NICK"):
-            self.e_nick.notify(nick, user, host, args[0])
+            self.event.notify("nick", nick, user, host, args[0])
         elif(command == "NOTICE"):
-            self.e_notice.notify(nick, user, host, args[0], args[1])
+            self.event.notify("notice", nick, user, host, args[0], args[1])
         elif(command == "PRIVMSG"):
-            self.e_privmsg.notify(nick, user, host, args[0], args[1])
+            self.event.notify("privmsg", nick, user, host, args[0], args[1])
+        elif(command == "376"):
+            self.event.notify("endofmotd", nick, user, host, args[0])
     
-parser = Parser()
+class Writer(object):
+    def __init__(self):
+        self.lock = threading.RLock() # (use "with"-block to lock writer)
 
-def debug(eventname, *args, **kwargs):
-    print "-"*32
-    print "Event", eventname
-    print repr(args)
-    print repr(kwargs)
+        self.event = Events()
 
-#parser.e_notice.listen(debug, "Notice")
-parser.e_privmsg.listen(debug, "Privmsg")
-parser.e_topic.listen(debug, "Topic")
-#parser.e_msg.listen(debug, "MSG")
+        self.event.add("line", self.onwriteline)
+    
+    def onwriteline(self, line):
+        with self.lock:
+            self.event.notify("data", line + "\r\n")
+    
+    def command(self, command, args):
+        if(len(args) != 0):
+            args[-1] = ":" + args[-1]
+            argstr = " ".join(args)
+        else:
+            argstr = ""
 
+        self.event.notify("line", "%s %s" % (command, argstr))
 
-parser.e_data.notify(open("/home/bjorn/projects/lanbot/app/lib/derp").read())
+    def join(self, chan):
+        self.command("JOIN", [chan])
 
+    def part(self, chan):
+        self.command("PART", [chan])
+
+    def quit(self, msg):
+        self._quit = True
+        self.command("QUIT", [msg])
+    
+    def nick(self, nick):
+        self.command("NICK", [nick])
+    
+    def user(self, username, hostname, servername, realname):
+        self.command("USER", [username, hostname, servername, realname])
+    
+    def pong(self, msg):
+        self.command("PONG", [msg])
+
+    def msgline(self, recipient, msg):
+        self.command("PRIVMSG", [recipient, msg])
+
+class Connection(object):
+    def __init__(self):
+        self.socket = socket.socket()
+
+        self.event = Events()
+        
+        self.event.add("send", self.onsend)
+
+    def connect(self, server, port):
+        self.socket.connect((server, port))
+    
+    def recvloop(self):
+        while True:
+            data = self.socket.recv(4096)
+            
+            if data == "":
+                self.event.notify("disconnect")
+                return
+            
+            self.event.notify("recv", data)
+
+    def onsend(self, data):
+        self.socket.sendall(data)
 
 class Client(object):
-    def __init__(self):
-        pass
+    def __init__(self, nick):
+        self.parser = Parser()
+        self.writer = Writer()
+        self.conn = Connection()
+        
+        self.event = Events()
 
-#class BasicClient(object):
-#    def __init__(self):
-#        self.buf = ""
-#        self._nick = None
-#        self.writelock = threading.RLock() # (use "with"-statement to lock)
-#        self._quit = False
-#        
-#    def onrecv(self, data):
-#        self.buf += data
-#        lines = self.buf.split("\r\n")
-#        self.buf = lines.pop()
-#        for line in lines:
-#            threading.Thread(target = self.onrecvline, args = (line,)).start()
-#    
-#    def onrecvline(self, line):
-#        match = message_matcher.match(line)
-#        
-#        if match == None:
-#            return
-#        
-#        servername = match.group(3)
-#        nick = match.group(5)
-#        user = match.group(6)
-#        host = match.group(7)
-#        command = match.group(8)
-#        params = match.group(12).split(" ")[1:]
-#        trailparam = match.group(15)
-#        
-#        if trailparam != None:
-#            params += [trailparam]
-#        
-#        self.onmsg(servername, nick, user, host, command, params)
-#        
-#    def join(self, chan):
-#        self.command("JOIN", [chan])
+        self.conn.event.add("recv", self.parser.event.notify, "data")
+        self.writer.event.add("data", self.conn.event.notify, "send")
+        
+        self.parser.event.add("nick", self.onnick)
+        self.parser.event.add("ping", self.onping)
+        self.parser.event.add("privmsg", self.onprivmsg)
+
+        self._nick = nick
+        self._quit = False
+    
+    def start(self, server, port):
+        self.conn.connect(server, port)
+        self.writer.nick(self._nick)
+        self.writer.user("ignored", "ignored", "ignored", "ignored")
+        self.conn.recvloop()
+
+    def onprivmsg(self, fromnick, fromuser, fromhost, mask, msg):
+        if mask.startswith("#"):
+            self.event.notify("chanmsg", fromnick, fromuser, fromhost, mask, msg)
+        elif mask == self._nick:
+            self.event.notify("usermsg", fromnick, fromuser, fromhost, msg)
+    
+        if self._nick == None:
+            self._nick = nick
+
+    def onping(self, token):
+        self.writer.pong(token)
+    
+    def onnick(self, nick, new):
+        if nick == self._nick:
+            self._nick = new
+
+#while True:
+#    client = Client("LANBot")
+#    client.writer.event.add("line", lambda line: derp("> " + repr(line)))
+#    client.event.add("chanmsg", lambda *args: derp("ChanMSG: " + repr(args)))
+#    client.event.add("usermsg", lambda *args: derp("UserMSG: " + repr(args)))
+#    client.parser.event.add("line", lambda line: derp("< " + repr(line)))
+#    client.parser.event.add("endofmotd", lambda *args: client.writer.join("#dikulan"))
 #
-#    def part(self, chan):
-#        self.command("PART", [chan])
-#
-#    def quit(self, msg):
-#        self.command("QUIT", [msg])
-#        self._quit = True
-#    
-#    def nick(self, nick):
-#        self.command("NICK", [nick])
-#        if self._nick == None:
-#            self._nick = nick
-#    
-#    def user(self, username, hostname, servername, realname):
-#        self.command("USER", [username, hostname, servername, realname])
-#    
-#    def pong(self, msg):
-#        self.command("PONG", [msg])
-#    
-#    def msgline(self, recipient, msg):
-#        self.command("PRIVMSG", [recipient, msg])
-#
-#    
-#    def command(self, command, args):
-#        if(len(args) != 0):
-#            args[-1] = ":" + args[-1]
-#            argstr = " ".join(args)
-#        else:
-#            argstr = ""
-#        
-#        self.sendline("%s %s" % (command, argstr))
-#        
-#    def sendline(self, string):
-#        self.send(string + u"\r\n")
-#
-#    def send(self, data):
-#        pass
-#        
-#    def onmsg(self, servername, nick, user, host, command, args):
-#        if(command == "PING"):
-#            self.onping(args[0])
-#        if(command == "NICK"):
-#            self.onnick(nick, args[0])
-#        if(command == "PRIVMSG"):
-#            self.onprivmsg(args[1], nick, host, args[0])
-#    
-#    def onprivmsg(self, msg, sender_nick, sender_host, recipient):
-#        if recipient.startswith("#"):
-#            self.onchanmsg(msg, sender_nick, sender_host, recipient)
-#        elif recipient == self._nick:
-#            self.onusermsg(msg, sender_nick, sender_host)
-#    
-#    def onchanmsg(self, msg, sender_nick, sender_host, channel):
-#        pass
-#    
-#    def onusermsg(self, msg, sender_nick, sender_host):
-#        pass
-#    
-#    def onping(self, token):
-#        self.pong(token)
-#    
-#    def onnick(self, nick, new):
-#        if nick == self._nick:
-#            self._nick = new
-#        print self._nick
-#    
-#class SocketClient(BasicClient):
-#    def __init__(self, socket):
-#        BasicClient.__init__(self)
-#        self.socket = socket
-#    
-#    def loop(self):
-#        while True:
-#            if self._quit:
-#                with self.writelock:
-#                    self.socket.close()
-#                    return
-#            
-#            data = self.socket.recv(4096)
-#            
-#            if data == "":
-#                return
-#            
-#            self.onrecv(data)
-#
-#    def send(self, data):
-#        BasicClient.send(self, data)
-#        if isinstance(data, unicode):
-#            data = data.encode("utf-8")
-#        with self.writelock:
-#            self.socket.sendall(data)
-#
-#class Client(SocketClient):
-#    def __init__(self, address, port):
-#        sock = socket.socket()
-#        sock.connect((address, port))
-#        SocketClient.__init__(self, sock)
+#    client.start("irc.freenode.net", 6667)
+
