@@ -154,7 +154,7 @@ class Client(object):
         self.writer.nick(self._nick)
         self.writer.user("ignored", "ignored", "ignored", "ignored")
         self.conn.recvloop()
-
+    
     def onprivmsg(self, fromnick, fromuser, fromhost, mask, msg):
         if mask.startswith("#"):
             self.event.notify("chanmsg", fromnick, fromuser, fromhost, mask, msg)
@@ -170,14 +170,4 @@ class Client(object):
     def onnick(self, nick, new):
         if nick == self._nick:
             self._nick = new
-
-#while True:
-#    client = Client("LANBot")
-#    client.writer.event.add("line", lambda line: derp("> " + repr(line)))
-#    client.event.add("chanmsg", lambda *args: derp("ChanMSG: " + repr(args)))
-#    client.event.add("usermsg", lambda *args: derp("UserMSG: " + repr(args)))
-#    client.parser.event.add("line", lambda line: derp("< " + repr(line)))
-#    client.parser.event.add("endofmotd", lambda *args: client.writer.join("#dikulan"))
-#
-#    client.start("irc.freenode.net", 6667)
 
