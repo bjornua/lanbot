@@ -17,6 +17,10 @@ class LANBot(object):
         msg = unicode(msg, "utf-8", "replace")
         date = datetime.now().strftime("%H:%M:%S")
         print u"%s - [%s][%s] %s" % (date, chan, fromnick, msg)
+
+        if fromnick == "freeload" and msg == "bla":
+            for x in range(10):
+                self.client.writer.msglines("#dikulan", [u"1",u"2",u"3"])
         
     def onusermsg(self, fromnick, fromuser, fromhost, msg):
         msg = unicode(msg, "utf-8", "replace")

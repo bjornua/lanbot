@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from event import Events
 
+from app.lib.tokenbucket import TokenBucket
+
 import re
 import socket
 import threading
@@ -69,6 +71,8 @@ class Writer(object):
         self.lock = threading.RLock() # (use "with"-block to lock writer)
 
         self.event = Events()
+        
+        self.messagetokens = TokenBucket(3,16) # 3 Messages per 16 seconds
 
         self.event.add("line", self.onwriteline)
     
@@ -104,8 +108,16 @@ class Writer(object):
     def pong(self, msg):
         self.command("PONG", [msg])
 
-    def msgline(self, recipient, msg):
-        self.command("PRIVMSG", [recipient, msg])
+    def msgline(self, recipient, msg, blocking=True):
+        return self.msglines(recipient, [msg], blocking)
+    
+    def msglines(self, recipient, lines, blocking=True):
+        if self.messagetokens.consume(len(lines), blocking):
+            for line in lines:
+                line = line.encode("utf-8")
+                self.command("PRIVMSG", [recipient, line])
+            return True
+        return False
 
 class Connection(object):
     def __init__(self):
