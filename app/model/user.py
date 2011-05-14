@@ -7,10 +7,7 @@ class UserExists(Exception):
     pass
 
 def authenticate(username, password):
-    result = db().view("user/auth", 
-        include_doc=True,
-        key=[username, password],
-    )
+    result = db().view("user/auth", include_doc=True, key=[username, password])
     
     for row in result:
         return row.id
@@ -41,5 +38,3 @@ def remove(username):
         return False
     del db()[userid]
     return True
-
-

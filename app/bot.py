@@ -4,7 +4,6 @@ from datetime import datetime
 from app.lib.string import parsecommand
 
 
-
 class LANBot(object):
     def __init__(self, nick):
         self.client = app.lib.irc.Client(nick)
@@ -29,11 +28,23 @@ class LANBot(object):
         print u"%s - [%s][%s] %s" % (date, chan, fromnick, msg)
         
         if msg.startswith("!"):
-            parsed = parsecommand(msg[1:])
-            self.client.writer.msgline(chan, repr(parsed), blocking=False)
-            self.client.writer.msgline(chan, repr(parsed), blocking=False)
+            args = parsecommand(msg[1:])
+            if len(args) != 0:
+                self.oncommand(fromnick, fromuser, fromhost, chan, args[0], args[1:])
+                
+    
+    def oncommand(self, fromnick, fromuser, fromhost, chan, command, args):
+        self.client.writer.msgline(chan, " | ".join(": ".join(x) for x in (
+            ("Kaldenavn", repr(fromnick)),
+            ("Brugernavn", repr(fromuser)),
+            ("Hostnavn", repr(fromhost)),
+            ("Kanal", repr(chan)),
+            ("Kommando", repr(command)),
+            ("Paramtre", repr(args)),
 
+        )))
         
+
     def onusermsg(self, fromnick, fromuser, fromhost, msg):
         msg = unicode(msg, "utf-8", "replace")
         if fromnick == "freeload" and msg == u"!quit":
