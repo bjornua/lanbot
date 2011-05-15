@@ -1,5 +1,10 @@
 import threading
 
+class Limitless(object):
+    def consume(self, n):
+        return True
+        
+
 class TokenBucket(object):
     def __init__(self, tokens, restoredelay):
         self.restoredelay = restoredelay
