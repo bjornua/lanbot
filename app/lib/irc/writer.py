@@ -7,7 +7,7 @@ class Writer(object):
     def __init__(self):
         self.lock = threading.RLock() # (use "with"-block to lock writer)
         self.event = Events()
-        self.messagetokens = TokenBucket(5 ,16) # 5 Messages per 16 seconds
+        self.messagetokens = TokenBucket(6, 16) # 5 Messages per 16 seconds
         self.event.add("line", self.onwriteline)
     
     def onwriteline(self, line):
