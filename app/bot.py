@@ -36,7 +36,7 @@ class LANBot(object):
     def oncommand(self, msg, command, args):
         try:
             command = commands[command]
-        except IndexError:
+        except KeyError:
             return
         command = command(self, None, msg)
         if not command.exists():
