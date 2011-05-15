@@ -1,15 +1,29 @@
 # -*- coding: utf-8 -*-
 import app.lib.command
-import datetime
 
-class Now(app.lib.command.Command):
+from datetime import datetime
+
+from pytz import timezone
+
+tz_utc = timezone("UTC")
+
+timezones = (
+    ("Danmark", timezone("Europe/Copenhagen")),
+    ("Korea", timezone("Asia/Seoul")),
+    ("Pacific Daylight Time (USA)", timezone("America/Los_Angeles")),
+)
+
+class Command(app.lib.command.BaseCommand):
     name = "now"
     
     def exists(self):
         return True
     
-    def execute(self):
-        tstr = datetime.datetime.now().strftime("%d/%m-%Y kl. %H:%M:%S")
-        self.respond(tstr)
+    def __call__(self):
+        utc = datetime.utcnow().replace(tzinfo = tz_utc)
+        
 
-
+        self.msg.reply(" | ".join(
+            label + ": " + utc.astimezone(tz).strftime("%d/%m-%Y kl. %H:%M:%S")
+            for (label, tz) in timezones
+        ))

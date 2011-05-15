@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-import app.lib.irc
+import app.lib.irc.client
 from datetime import datetime
 from app.lib.string import parsecommand
+
+from threading import Thread
+
+from app.commands import commands
 
 
 class LANBot(object):
     def __init__(self, nick):
-        self.client = app.lib.irc.Client(nick)
-        self.client.event.add("chanmsg", self.onchanmsg)
-        self.client.event.add("usermsg", self.onusermsg)
+        self.client = app.lib.irc.client.Client(nick)
+        self.client.event.add("chatmsg", self.onchatmsg)
         self.client.parser.event.add("endofmotd", self.onendofmotd)
         self.client.parser.event.add("line", self.onrecvline)
         self.client.writer.event.add("line", self.onsendline)
+
     
     def onrecvline(self, line):
         print "< " + line
@@ -19,36 +23,24 @@ class LANBot(object):
         print "> " + line
 
     def onendofmotd(self, *args):
-        print "Joining #dikulan"
         self.client.writer.join("#dikulan")
 
-    def onchanmsg(self, fromnick, fromuser, fromhost, chan, msg):
-        msg = unicode(msg, "utf-8", "replace")
-        date = datetime.now().strftime("%H:%M:%S")
-        print u"%s - [%s][%s] %s" % (date, chan, fromnick, msg)
+    def onchatmsg(self, msg):
+        msg.text = unicode(msg.text, "utf-8", "replace")
         
-        if msg.startswith("!"):
-            args = parsecommand(msg[1:])
+        if msg.text.startswith("!"):
+            args = parsecommand(msg.text[1:])
             if len(args) != 0:
-                self.oncommand(fromnick, fromuser, fromhost, chan, args[0], args[1:])
-                
+                Thread(target=self.oncommand, args=(msg,args[0],args[1:])).start()
     
-    def oncommand(self, fromnick, fromuser, fromhost, chan, command, args):
-        self.client.writer.msgline(chan, " | ".join(": ".join(x) for x in (
-            ("Kaldenavn", repr(fromnick)),
-            ("Brugernavn", repr(fromuser)),
-            ("Hostnavn", repr(fromhost)),
-            ("Kanal", repr(chan)),
-            ("Kommando", repr(command)),
-            ("Paramtre", repr(args)),
+    def oncommand(self, msg, command, args):
+        try:
+            command = commands[command]
+        except IndexError:
+            return
+        command = command(self, None, msg)
+        if not command.exists():
+            return
+        command(*args)
 
-        )))
         
-
-    def onusermsg(self, fromnick, fromuser, fromhost, msg):
-        msg = unicode(msg, "utf-8", "replace")
-        if fromnick == "freeload" and msg == u"!quit":
-            self.client.writer.quit("Quitting")
-        date = datetime.now().strftime("%H:%M:%S")
-        print u"%s - [%s] %s" % (date, fromnick, msg)
-
