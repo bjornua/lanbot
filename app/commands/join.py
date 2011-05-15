@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import app.lib.command
 
-class Join(app.lib.command.Command):
+class Command(app.lib.command.BaseCommand):
     name = "join"
-    def execute(self, channel):
+    def __call__(self, channel):
         "#<channel>"
         self.bot.client.join(channel)
 
