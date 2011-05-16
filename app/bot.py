@@ -7,7 +7,6 @@ from threading import Thread
 
 from app.commands import commands
 
-
 class LANBot(object):
     def __init__(self, nick):
         self.client = app.lib.irc.client.Client(nick)
@@ -15,7 +14,8 @@ class LANBot(object):
         self.client.parser.event.add("endofmotd", self.onendofmotd)
         self.client.parser.event.add("line", self.onrecvline)
         self.client.writer.event.add("line", self.onsendline)
-
+        
+        self.commands = commands
     
     def onrecvline(self, line):
         print "< " + line

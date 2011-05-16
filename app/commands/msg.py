@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import app.lib.command
 
-class Command(app.lib.command.Command):
+class Command(app.lib.command.BaseCommand):
     name = "msg"
     
     def __call__(self, reciever, msg):

@@ -2,7 +2,7 @@
 import app.lib.command
 
 class Command(app.lib.command.BaseCommand):
-    name = "fart"
+    name = "banner"
     def exists(self):
         return self.msg.chan != None
     
