@@ -14,5 +14,6 @@ class BaseCommand(object):
         self.msg.reply("Not implemented!")
 
     def exists(self):
+        return True
         return self.msg.chan == None
 
