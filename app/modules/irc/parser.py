@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from app.lib.event import Events
+from app.modules.utils.event import Events
 
 import re
 
