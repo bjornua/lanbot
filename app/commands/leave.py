@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import app.lib.command
 
-class Leave(app.lib.command.Command):
+class Command(app.lib.command.BaseCommand):
     name = "leave"
-    def execute(self, channel):
+    def __call__(self, channel):
         "<channel>"
-        self.bot.client.part(channel)
-    
-
+        self.bot.client.writer.part(channel)

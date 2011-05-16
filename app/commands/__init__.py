@@ -3,6 +3,8 @@ import now
 import google
 import fart
 import join
+import leave
+import msg
 commands = {}
 
 for module in (
@@ -10,6 +12,8 @@ for module in (
     google,
     fart,
     join,
+    leave,
+    msg,
 ):
     command = module.Command
     print "Adding command: " + command.name
