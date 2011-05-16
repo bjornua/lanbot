@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-commands = {}
-
-from pprint import pprint
-
 
 import os
 
 selfdir, selffilename = os.path.split(__file__)
-
 
 modulenames = []
 for node in os.listdir(selfdir):
@@ -27,10 +22,21 @@ for node in os.listdir(selfdir):
 
     modulenames += [modulename]
 
+print "Found modules: " + ", ".join(modulenames)
+
 modules = {}
+onload = []
+
+print "Loading modules"
 for name in modulenames:
+    print "Loading " + name
     module = __import__(name, globals(), locals(), [], 1)
     modules[modulename] = module
 
-print (modules)
-exit()
+    try:
+        onload.append(module.onload)
+    except AttributeError:
+        pass
+
+for func in onload:
+    func()

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import app.lib.irc.client
+import app.modules.irc.client
 from datetime import datetime
 from app.lib.string import parsecommand
 
