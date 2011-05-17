@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from app.modules.irc import parser, writer
 
 channels = (

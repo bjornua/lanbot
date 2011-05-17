@@ -3,6 +3,8 @@ import re
 
 from app.modules.irc import client
 from app.modules.utils.event import Events
+from threading import Thread
+
 
 quoted_string = r'"(([^"\\]|\\.)*)"'
 normal_string = r'[^ ]+'
@@ -25,13 +27,29 @@ def parsecommand(s):
 
     return args
 
-
 commands = {}
-
-def register_command(command):
-    commands[command.name]:
+def registercommand(command):
+    print "Added command: " + command.name
+    commands[command.name] = command
 
 def onmsg(msg):
-    print(parsecommand(msg.text))
+    if not msg.text.startswith("!"):
+        return
+
+    tokens = parsecommand(msg.text[1:])
+    if len(tokens) == 0:
+        return
+    
+    command = tokens[0]
+    args = tokens[1:]
+
+    try:
+        Command = commands[command]
+    except KeyError:
+        raise
+    print "1"
+    func = Command(msg)
+    print "2"
+    Thread(target=func, args=args).start()
 
 client.event.add("chatmsg", onmsg)
