@@ -4,20 +4,16 @@ import urllib
 import app.modules.command.base
 import app.modules.command
 
-def query(q):
-    print "ji"
+def query(q, msg):
     path = "/search?" + urllib.urlencode({"q": q}) + "&hl=da&btnI&safe=off"
-    print "ji1"
     conn = httplib.HTTPConnection("www.google.com")
-    print "ji2"
     headers = {"Referer": "http://www.google.com/", "Connection": "close"}
-    print "ji3"
-    conn.request("GET", path, None, headers)
-    print "ji4"
+    print "1"
+    msg.reply("Looking up: " + q)
+    conn.request("GET", path, "", headers)
+    print "2"
     response = conn.getresponse()
-    print "ji5"
     conn.close()
-    print "ji6"
     return response.getheader("Location")
 
 class GoogleCommand(app.modules.command.base.BaseCommand):
@@ -25,15 +21,11 @@ class GoogleCommand(app.modules.command.base.BaseCommand):
     
     def exists(self):
         return True
-    
     def __call__(self, *args):
         if len(args) == 0:
             return
-        print "3"
-        result = query('"' + '" "'.join(args) + '"')
-        print "4"
+        result = query('"' + '" "'.join(args) + '"' , self.msg)
         self.msg.reply(result)
-        print "5"
 
 
 app.modules.command.registercommand(GoogleCommand)

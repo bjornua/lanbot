@@ -47,9 +47,8 @@ def onmsg(msg):
         Command = commands[command]
     except KeyError:
         raise
-    print "1"
     func = Command(msg)
-    print "2"
+    #func(*args)
     Thread(target=func, args=args).start()
 
 client.event.add("chatmsg", onmsg)
