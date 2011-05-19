@@ -36,5 +36,7 @@ for name in modulenames:
     except AttributeError:
         pass
 
+
+print onload
 for func in onload:
     func()

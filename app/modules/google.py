@@ -27,6 +27,4 @@ class GoogleCommand(app.modules.command.base.BaseCommand):
         result = query('"' + '" "'.join(args) + '"' , self.msg)
         self.msg.reply(result)
 
-
 app.modules.command.registercommand(GoogleCommand)
-
