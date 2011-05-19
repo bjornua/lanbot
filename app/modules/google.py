@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
 import httplib
 import urllib
-import app.modules.command.base
-import app.modules.command
+from app.modules.command.base import BaseCommand
+from app.modules.command import registercommand
+
+from threading import Thread
 
 def query(q, msg):
     path = "/search?" + urllib.urlencode({"q": q}) + "&hl=da&btnI&safe=off"
     conn = httplib.HTTPConnection("www.google.com")
     headers = {"Referer": "http://www.google.com/", "Connection": "close"}
-    print "1"
-    msg.reply("Looking up: " + q)
     conn.request("GET", path, "", headers)
-    print "2"
     response = conn.getresponse()
     conn.close()
     return response.getheader("Location")
 
-class GoogleCommand(app.modules.command.base.BaseCommand):
+class Google(BaseCommand):
     name = "google"
     
     def exists(self):
@@ -27,4 +26,4 @@ class GoogleCommand(app.modules.command.base.BaseCommand):
         result = query('"' + '" "'.join(args) + '"' , self.msg)
         self.msg.reply(result)
 
-app.modules.command.registercommand(GoogleCommand)
+registercommand(Google)

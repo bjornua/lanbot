@@ -8,11 +8,15 @@ from connection import Connection
 class ChatMessage(object):
     def __init__(self, client, nick, user, host, text, chan=None):
         self.client = client
+
+        text = text.decode("utf_8", "replace")
+
         self.nick = nick
         self.user = user
         self.host = host
         self.text = text
         self.chan = chan
+
 
     def reply(self, text, blocking=True):
         self.replylines([text], blocking)

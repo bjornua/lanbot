@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from app.modules.utils.event import Events
-from app.modules.utils.ratelimit import TokenBucket
+from app.modules.utils.ratelimit import TokenBucket, Limitless
 import threading
 
 class Writer(object):

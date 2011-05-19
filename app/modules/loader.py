@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os
+import threading
 
 selfdir, selffilename = os.path.split(__file__)
+
+selfmodulename = os.path.splitext(selffilename)[0]
 
 modulenames = []
 for node in os.listdir(selfdir):
     path = os.path.join(selfdir, node)
-    if selffilename == node or "__init__.py" == node:
-        continue
     
     if os.path.isfile(path):
         name, ext = os.path.splitext(node)
@@ -19,7 +20,12 @@ for node in os.listdir(selfdir):
         modulename = node
     else:
         continue
+
+    if modulename == selfmodulename or modulename == "__init__":
+        continue
+
     modulenames += [modulename]
+
 
 print "Found modules: " + ", ".join(modulenames)
 modules_ = {}
@@ -36,7 +42,5 @@ for name in modulenames:
     except AttributeError:
         pass
 
-
-print onload
 for func in onload:
-    func()
+    threading.Thread(target = func).start()

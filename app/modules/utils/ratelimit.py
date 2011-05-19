@@ -1,7 +1,7 @@
 import threading
 
 class Limitless(object):
-    def consume(self, n):
+    def consume(self, n, blocking = True):
         return True
         
 
