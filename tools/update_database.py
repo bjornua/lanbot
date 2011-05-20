@@ -11,7 +11,7 @@ sys.path[0] = os.path.join(os.path.dirname(__file__), "..")
 os.chdir(sys.path[0])
 
 import couchdb
-from app.config.generated import config
+from app.module.config.generated import config
 
 
 try:

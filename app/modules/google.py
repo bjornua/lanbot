@@ -23,6 +23,7 @@ class Google(BaseCommand):
     def __call__(self, *args):
         if len(args) == 0:
             return
+        self.session["is_authed"] = 4
         result = query('"' + '" "'.join(args) + '"' , self.msg)
         self.msg.reply(result)
 

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from app.modules.utils.ratelimit import Limitless
+from app.modules.session import Session
+
 
 class BaseCommand(object):
     rate_limiter = Limitless()
@@ -7,6 +9,7 @@ class BaseCommand(object):
 
     def __init__(self, msg):
         self.msg = msg
+        self.session = Session(msg.nick, msg.host) 
     
     def __call__(self, *args, **kwargs):
         self.msg.reply("Not implemented!")

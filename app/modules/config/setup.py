@@ -1,8 +1,5 @@
-#!/usr/bin/python2 -B
 # -*- coding: utf-8 -*-
 import os.path
-import sys
-sys.path[0] = os.path.join(os.path.dirname(__file__), "..")
 
 def user_query(itemname, converter, default=None):
     while True:
@@ -21,9 +18,9 @@ def user_query(itemname, converter, default=None):
 
 def prompt_update_config():
     try:
-        from app.config.generated import config
+        from app.modules.config.generated import config
     except ImportError:
-        from app.config.default import config
+        from app.modules.config.default import config
         config = config()
 
     for name, key, converter in [
@@ -34,7 +31,7 @@ def prompt_update_config():
     return config
 
 def write_config(config):
-    filename = os.path.join(os.path.dirname(__file__), "..", "app", "config", "generated.py")
+    filename = os.path.join(os.path.dirname(__file__), "generated.py")
     fhandle = open(filename, "w")
     fhandle.write(
         "# -*- coding: utf-8 -*-\n"
@@ -43,6 +40,3 @@ def write_config(config):
       + "config.update(" + repr(config) + ")"
     )
 
-if __name__ == "__main__":
-    config = prompt_update_config()
-    write_config(config)
