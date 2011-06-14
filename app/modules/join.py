@@ -25,4 +25,5 @@ class Join(BaseCommand):
         self.msg.reply(repr(channel))
         writer.join(channel)
 
-registercommand(Join)
+#Lets not do that without authentication
+#registercommand(Join)
