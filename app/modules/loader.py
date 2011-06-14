@@ -27,13 +27,13 @@ for node in os.listdir(selfdir):
     modulenames += [modulename]
 
 
-print "Found modules: " + ", ".join(modulenames)
+print("Found modules: " + ", ".join(modulenames))
 modules_ = {}
 onload = []
 
-print "Loading modules"
+print("Loading modules")
 for name in modulenames:
-    print "Loading " + name
+    print("Loading " + name)
     module = __import__(name, globals(), locals(), [], 1)
     modules_[modulename] = module
 

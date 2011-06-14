@@ -18,4 +18,3 @@ else:
 if setup:
     write_config(prompt_update_config())
     import  app.modules.config.generated
-print dir (app.modules)

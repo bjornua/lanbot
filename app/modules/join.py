@@ -7,11 +7,6 @@ class Join(BaseCommand):
     name = "join"
 
     def texttochannel(self, name):
-        try:
-            name = name.encode("ascii")
-        except UnicodeEncodeError:
-            return
-        
         if not (name.startswith("#") or name.startswith("&")):
             return
 
@@ -24,7 +19,7 @@ class Join(BaseCommand):
     def __call__(self, textchannel):
         channel = self.texttochannel(textchannel)
         if channel == None:
-            self.msg.reply(u"Kanalens navn er ugyldigt: " + textchannel)
+            self.msg.reply("Kanalens navn er ugyldigt: " + textchannel)
             return
         
         self.msg.reply(repr(channel))

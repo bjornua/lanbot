@@ -29,7 +29,7 @@ def parsecommand(s):
 
 commands = {}
 def registercommand(command):
-    print "Added command: " + command.name
+    print("Added command: " + command.name)
     commands[command.name] = command
 
 def onmsg(msg):

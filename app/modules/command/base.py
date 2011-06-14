@@ -2,7 +2,6 @@
 from app.modules.utils.ratelimit import Limitless
 from app.modules.session import Session
 
-
 class BaseCommand(object):
     rate_limiter = Limitless()
     usage = "There is no help for this command"
@@ -17,4 +16,3 @@ class BaseCommand(object):
     def exists(self):
         return True
         return self.msg.chan == None
-

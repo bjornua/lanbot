@@ -12,18 +12,22 @@ class Writer(object):
     
     def onwriteline(self, line):
         with self.lock:
-            self.event.notify("data", line + "\r\n")
+            self.event.notify("data", line + b"\r\n")
     
     def command(self, command, args):
         if(len(args) != 0):
-            args[-1] = ":" + args[-1]
-            argstr = " ".join(args)
+            args[-1] = b":" + args[-1]
+            argstr = b" ".join(args)
         else:
-            argstr = ""
+            argstr = b""
+        
+        command = command.encode("iso-8859-1")
+        line = command + b" " + argstr
 
-        self.event.notify("line", "%s %s" % (command, argstr))
+        self.event.notify("line", line)
 
     def join(self, chan):
+        chan = chan.encode("iso-8859-1")
         self.command("JOIN", [chan])
 
     def part(self, chan):
@@ -34,9 +38,14 @@ class Writer(object):
         self.command("QUIT", [msg])
     
     def nick(self, nick):
+        nick = nick.encode("iso-8859-1")
         self.command("NICK", [nick])
     
     def user(self, username, hostname, servername, realname):
+        username = username.encode("iso-8859-1")
+        hostname = hostname.encode("iso-8859-1")
+        servername = servername.encode("iso-8859-1")
+        realname = realname.encode("utf-8")
         self.command("USER", [username, hostname, servername, realname])
     
     def pong(self, msg):
@@ -46,6 +55,7 @@ class Writer(object):
         return self.msglines(recipient, [msg], blocking)
     
     def msglines(self, recipient, lines, blocking=True):
+        recipient = recipient.encode("iso-8859-1")
         if self.messagetokens.consume(len(lines), blocking):
             for line in lines:
                 line = line.encode("utf-8")

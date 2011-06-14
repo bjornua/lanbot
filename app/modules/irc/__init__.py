@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 from app.modules.utils.event import Events
 
-from parser import Parser
-from writer import Writer
-from connection import Connection
+from .parser import Parser
+from .writer import Writer
+from .connection import Connection
 
 class ChatMessage(object):
     def __init__(self, client, nick, user, host, text, chan=None):
         self.client = client
-
-        text = text.decode("utf_8", "replace")
 
         self.nick = nick
         self.user = user
@@ -71,11 +69,11 @@ writer = client.writer
 conn = client.conn
 
 def onrecvline(line):
-    print "< " + line
+    print("<", line)
 parser.event.add("line", onrecvline)
 
 def onsendline(line):
-    print "> " + line
+    print(">", line)
 writer.event.add("line", onsendline)
 
 def onload():

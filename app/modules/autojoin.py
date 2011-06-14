@@ -2,7 +2,7 @@
 from app.modules.irc import parser, writer
 
 channels = [
-#    "#dikulan",
+    "#dikulan",
 ]
 
 def onendofmotd(*args):

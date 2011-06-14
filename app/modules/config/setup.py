@@ -4,15 +4,15 @@ import os.path
 def user_query(itemname, converter, default=None):
     while True:
         if default == None:
-            answer = raw_input("Indtast %s: " % (itemname,))
+            answer = input("Indtast %s: " % (itemname,))
         else:
-            answer = raw_input("Indtast %s [%s]: " % (itemname, default))
+            answer = input("Indtast %s [%s]: " % (itemname, default))
             if answer == "":
                 return default
         try:
             answer = converter(answer)
         except:
-            print "Kunne ikke forstå værdien, prøv igen."
+            print("Kunne ikke forstå værdien, prøv igen.")
             continue
         return answer
 
@@ -35,7 +35,7 @@ def write_config(config):
     fhandle = open(filename, "w")
     fhandle.write(
         "# -*- coding: utf-8 -*-\n"
-      + "from app.config.default import config\n"
+      + "from app.modules.config.default import config\n"
       + "config = config()\n"
       + "config.update(" + repr(config) + ")"
     )

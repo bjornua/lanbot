@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import httplib
-import urllib
+import http.client
+import urllib.request, urllib.parse, urllib.error
 from app.modules.command.base import BaseCommand
 from app.modules.command import registercommand
 
 from threading import Thread
 
-def query(q, msg):
-    path = "/search?" + urllib.urlencode({"q": q}) + "&hl=da&btnI&safe=off"
-    conn = httplib.HTTPConnection("www.google.com")
+def query(q):
+    path = "/search?" + urllib.parse.urlencode({"q": q}) + "&hl=da&btnI&safe=off"
+    conn = http.client.HTTPConnection("www.google.com")
     headers = {"Referer": "http://www.google.com/", "Connection": "close"}
     conn.request("GET", path, "", headers)
     response = conn.getresponse()
@@ -23,8 +23,7 @@ class Google(BaseCommand):
     def __call__(self, *args):
         if len(args) == 0:
             return
-        self.session["is_authed"] = 4
-        result = query('"' + '" "'.join(args) + '"' , self.msg)
+        result = query('"' + '" "'.join(args) + '"')
         self.msg.reply(result)
 
 registercommand(Google)
